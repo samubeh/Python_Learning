@@ -1,0 +1,3 @@
+print ("Que edad tienes")
+age=int(input())
+print("In ten years you will be" ,int(age+10))

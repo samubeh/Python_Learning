@@ -1,0 +1,210 @@
+# -*- coding: utf-8 -*-
+# Menú principal con idioma ES/EN, calculadora e historial
+
+import sys
+
+# ====== ESTADO GLOBAL (idioma e historial) ======
+STATE = {
+    "lang": "ES",     # "ES" o "EN"
+    "history": []     # lista de strings con resultados
+}
+
+# ====== TEXTOS (traducciones) ======
+TXT = {
+    "ES": {
+        "app_title":        "=== MENÚ PRINCIPAL ===",
+        "choose_option":    "Elige una opción:",
+        "opt_calc":         "1) Calculadora",
+        "opt_history":      "2) Ver historial",
+        "opt_clear_hist":   "3) Limpiar historial",
+        "opt_lang":         "4) Cambiar idioma (ES/EN)",
+        "opt_exit":         "5) Salir",
+        "invalid_opt":      "❌ Opción inválida.",
+        "goodbye":          "¡Hasta luego! 👋",
+
+        # calculadora
+        "calc_title":       "--- Calculadora ---",
+        "calc_menu":        "1=Suma | 2=Resta | 3=Multiplica | 4=Divide | 5=Potencia | 6=Volver",
+        "ask_option":       "Elige (1-6): ",
+        "ask_a":            "Número a: ",
+        "ask_b":            "Número b: ",
+        "only_numbers":     "❌ Error: ingresa números válidos.",
+        "div_zero":         "❌ No se puede dividir por 0.",
+        "result":           "Resultado: ",
+        "back":             "Volviendo al menú anterior...",
+
+        # historial
+        "history_title":    "--- Historial ---",
+        "history_empty":    "(vacío)",
+        "history_cleared":  "Historial limpiado.",
+
+        # idioma
+        "lang_now":         "Idioma actual: ",
+        "lang_prompt":      "Escribe ES o EN: ",
+        "lang_set":         "Idioma establecido a: ",
+        "lang_invalid":     "❌ Idioma inválido. Usa ES o EN."
+    },
+    "EN": {
+        "app_title":        "=== MAIN MENU ===",
+        "choose_option":    "Choose an option:",
+        "opt_calc":         "1) Calculator",
+        "opt_history":      "2) Show history",
+        "opt_clear_hist":   "3) Clear history",
+        "opt_lang":         "4) Change language (ES/EN)",
+        "opt_exit":         "5) Exit",
+        "invalid_opt":      "❌ Invalid option.",
+        "goodbye":          "Goodbye! 👋",
+
+        # calculator
+        "calc_title":       "--- Calculator ---",
+        "calc_menu":        "1=Sum | 2=Rest | 3=Multiply | 4=Divide | 5=Power | 6=Back",
+        "ask_option":       "Choose (1-6): ",
+        "ask_a":            "Number a: ",
+        "ask_b":            "Number b: ",
+        "only_numbers":     "❌ Error: please enter valid numbers.",
+        "div_zero":         "❌ You can't divide by 0.",
+        "result":           "Result: ",
+        "back":             "Returning to previous menu...",
+
+        # history
+        "history_title":    "--- History ---",
+        "history_empty":    "(empty)",
+        "history_cleared":  "History cleared.",
+
+        # language
+        "lang_now":         "Current language: ",
+        "lang_prompt":      "Type ES or EN: ",
+        "lang_set":         "Language set to: ",
+        "lang_invalid":     "❌ Invalid language. Use ES or EN."
+    }
+}
+
+# ====== HELPERS ======
+def t(key: str) -> str:
+    """Devuelve el texto traducido según el idioma actual."""
+    return TXT[STATE["lang"]][key]
+
+def input_float(prompt_key: str) -> float:
+    """Pide un número flotante con manejo de errores."""
+    while True:
+        try:
+            return float(input(TXT[STATE["lang"]][prompt_key]))
+        except ValueError:
+            print(t("only_numbers"))
+
+# ====== MÓDULOS DEL MENÚ ======
+def modulo_calculadora():
+    """Calculadora con submenú y registro en historial."""
+    print("\n" + t("calc_title"))
+    while True:
+        print(t("calc_menu"))
+        op = input(t("ask_option")).strip()
+
+        if op == "6":
+            print(t("back"))
+            break
+
+        if op not in {"1", "2", "3", "4", "5"}:
+            print(t("invalid_opt"))
+            continue
+
+        # Pedimos números solo para opciones válidas
+        a = input_float("ask_a")
+        b = input_float("ask_b") if op in {"1", "2", "3", "4", "5"} else 0.0
+
+        # Calculamos
+        res = None
+        if op == "1":
+            res = a + b
+        elif op == "2":
+            res = a - b
+        elif op == "3":
+            res = a * b
+        elif op == "4":
+            if b == 0:
+                print(t("div_zero"))
+                continue
+            res = a / b
+        elif op == "5":
+            # potencia
+            res = a ** b
+
+        # Mostramos y guardamos en historial
+        print(f"{t('result')}{res}")
+        # Guardamos una línea amigable con el idioma actual
+        label = {
+            ("ES","1"): "Suma",
+            ("ES","2"): "Resta",
+            ("ES","3"): "Multiplica",
+            ("ES","4"): "Divide",
+            ("ES","5"): "Potencia",
+            ("EN","1"): "Sum",
+            ("EN","2"): "Rest",
+            ("EN","3"): "Multiply",
+            ("EN","4"): "Divide",
+            ("EN","5"): "Power",
+        }[(STATE["lang"], op)]
+        STATE["history"].append(f"{label}: a={a}, b={b} -> {res}")
+
+def modulo_ver_historial():
+    """Muestra el historial."""
+    print("\n" + t("history_title"))
+    if not STATE["history"]:
+        print(t("history_empty"))
+        return
+    # Mostrar con numeración
+    for i, line in enumerate(STATE["history"], start=1):
+        print(f"{i}. {line}")
+
+def modulo_limpiar_historial():
+    """Limpia el historial."""
+    STATE["history"].clear()
+    print(t("history_cleared"))
+
+def modulo_cambiar_idioma():
+    """Permite alternar ES/EN en tiempo real."""
+    print()
+    print(t("lang_now") + STATE["lang"])
+    lang = input(t("lang_prompt")).strip().upper()
+    if lang in {"ES", "EN"}:
+        STATE["lang"] = lang
+        print(t("lang_set") + STATE["lang"])
+    else:
+        print(t("lang_invalid"))
+
+# ====== DISPATCHER DEL MENÚ PRINCIPAL ======
+def mostrar_menu_principal():
+    print("\n" + t("app_title"))
+    print(t("choose_option"))
+    print(t("opt_calc"))
+    print(t("opt_history"))
+    print(t("opt_clear_hist"))
+    print(t("opt_lang"))
+    print(t("opt_exit"))
+
+ACTIONS = {
+    "1": modulo_calculadora,
+    "2": modulo_ver_historial,
+    "3": modulo_limpiar_historial,
+    "4": modulo_cambiar_idioma
+}
+
+def main():
+    while True:
+        mostrar_menu_principal()
+        op = input("> ").strip()
+        if op == "5":
+            print(t("goodbye"))
+            break
+        action = ACTIONS.get(op)
+        if action is None:
+            print(t("invalid_opt"))
+            continue
+        action()  # ejecuta el módulo correspondiente
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n" + t("goodbye"))
+        sys.exit(0)

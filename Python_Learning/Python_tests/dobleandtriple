@@ -1,0 +1,4 @@
+print("Choose a number")
+number=int(input())
+print(f"The double of {number} is {number * 2}")
+print(f"The triple of {number} is {number * 3}")
